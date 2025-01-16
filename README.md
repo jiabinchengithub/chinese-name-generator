@@ -32,46 +32,74 @@ A web application that helps English speakers find meaningful Chinese names that
 - Semantic HTML structure
 - Optimized for fast loading and smooth user experience
 
-# Chinese Name Generator (中文姓名生成器)
+# Chinese Name Generator 中文名生成器
 
-一个帮助外国友人生成中文名字的网页应用。
+一个帮助外国人生成有文化内涵的中文名字的网页应用。
+
+## 在线体验
+
+访问以下链接即可使用：
+[Chinese Name Generator](https://chinese-name-generator-hdx8riyrb-jiabinchens-projects.vercel.app/)
 
 ## 功能特点
 
-- 输入英文名，自动生成对应的中文名建议
-- 每个建议包含：
-  - 中文名字
-  - 标准拼音
-  - 英文含义解释
-  - 中英文文化解释
-- 现代简洁的用户界面
+- 根据英文名生成富有文化内涵的中文名字
+- 提供拼音标注，方便发音
+- 解释名字含义
+- 提供中英文的文化背景说明
 - 响应式设计，支持各种设备
+- 使用智谱AI的GLM-4模型，提供高质量的名字建议
+
+## 使用方法
+
+1. 访问[应用网站](https://chinese-name-generator-hdx8riyrb-jiabinchens-projects.vercel.app/)
+2. 在输入框中输入英文名
+3. 点击"Generate Names"按钮
+4. 等待几秒钟，系统会生成3个中文名建议
+5. 每个名字建议都包含：
+   - 中文名字
+   - 拼音
+   - 含义解释
+   - 文化背景说明（中英双语）
 
 ## 技术实现
 
 - 前端：HTML5, CSS3, JavaScript
-- API：智谱AI GLM-4 flash 模型
-- 部署：GitHub Pages
-
-## 使用方法
-
-1. 访问网页
-2. 在输入框中输入英文名
-3. 点击 "Generate Names" 按钮
-4. 等待几秒钟，查看生成的中文名建议
+- API：智谱AI GLM-4 API
+- 部署：Vercel
 
 ## 本地开发
 
-1. 克隆仓库
-2. 在浏览器中打开 `index.html`
-3. 开始开发
+1. 克隆仓库：
+```bash
+git clone https://github.com/jiabinchengithub/chinese-name-generator.git
+```
 
-## 注意事项
+2. 进入项目目录：
+```bash
+cd chinese-name-generator
+```
 
-- 需要有效的API密钥才能使用
-- 建议使用现代浏览器访问
-- 请确保网络连接正常
+3. 使用任意HTTP服务器运行项目，例如使用Python：
+```bash
+python -m http.server 8000
+```
 
-## License
+4. 在浏览器中访问 `http://localhost:8000`
+
+## 部署
+
+本项目使用 Vercel 进行部署。如果你想部署自己的版本：
+
+1. Fork 这个仓库
+2. 在 [Vercel](https://vercel.com) 注册账号
+3. 导入你的 Fork 仓库
+4. Vercel 会自动部署并提供一个域名
+
+## 贡献
+
+欢迎提交 Issue 和 Pull Request 来帮助改进这个项目！
+
+## 许可证
 
 MIT License

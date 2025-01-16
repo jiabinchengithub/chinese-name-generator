@@ -80,7 +80,7 @@ const chineseCharacters = {
 // API配置
 const API_CONFIG = {
     url: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
-    apiKey: localStorage.getItem('zhipuai_api_key') || '' // 从本地存储获取API密钥
+    apiKey: '4c0023dd2e4a8d5e5a4d4e0c7b9a8d5e' // 替换为你的实际API密钥
 };
 
 // 系统提示词
@@ -104,44 +104,8 @@ const SYSTEM_PROMPT = `你是一位专业的中文起名专家，擅长为外国
   }
 ]`;
 
-// 检查API密钥
-function checkApiKey() {
-    const apiKey = localStorage.getItem('zhipuai_api_key');
-    if (!apiKey) {
-        const key = prompt('请输入你的智谱AI API密钥（访问 https://open.bigmodel.cn/ 获取）：');
-        if (key) {
-            localStorage.setItem('zhipuai_api_key', key);
-            API_CONFIG.apiKey = key;
-            return true;
-        }
-        return false;
-    }
-    return true;
-}
-
-// 清除API密钥
-function clearApiKey() {
-    localStorage.removeItem('zhipuai_api_key');
-    alert('API密钥已清除！');
-    location.reload();
-}
-
-// 添加设置按钮
-function addSettingsButton() {
-    const settingsButton = document.createElement('button');
-    settingsButton.textContent = '设置';
-    settingsButton.className = 'settings-button';
-    settingsButton.onclick = clearApiKey;
-    document.body.appendChild(settingsButton);
-}
-
 // 调用API生成名字
 async function generateChineseNames(englishName) {
-    if (!checkApiKey()) {
-        alert('需要API密钥才能使用此功能！');
-        return [];
-    }
-
     const loadingElement = document.getElementById('loading');
     loadingElement.style.display = 'block';
 
@@ -276,7 +240,4 @@ document.addEventListener('DOMContentLoaded', () => {
             generateBtn.click();
         }
     });
-
-    // 添加设置按钮
-    addSettingsButton();
 });
