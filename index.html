@@ -42,14 +42,6 @@
                         </label>
                     </div>
                 </div>
-                <div id="feedbackButtons" class="feedback-section" style="display: none;">
-                    <button id="likeBtn" class="feedback-btn">
-                        <i class="fas fa-thumbs-up"></i> 喜欢
-                    </button>
-                    <button id="dislikeBtn" class="feedback-btn">
-                        <i class="fas fa-thumbs-down"></i> 不喜欢
-                    </button>
-                </div>
             </div>
 
             <div id="error" class="error-message" style="display: none;"></div>
@@ -71,9 +63,15 @@
             <div class="footer-content">
                 <p>Made with <i class="fas fa-heart"></i> by Your Name</p>
                 <div class="social-links">
-                    <a href="#" title="Share on Twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="#" title="Share on Facebook"><i class="fab fa-facebook"></i></a>
-                    <a href="#" title="Share on LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" title="Share on Twitter" class="social-link">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" title="Share on Facebook" class="social-link">
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                    <a href="#" title="Share on LinkedIn" class="social-link">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
                 </div>
             </div>
         </footer>
@@ -81,18 +79,6 @@
 
     <!-- Audio for pronunciation -->
     <audio id="pronunciationAudio" style="display: none;"></audio>
-
-    <!-- Feedback Modal -->
-    <div id="feedbackModal" class="modal">
-        <div class="modal-content">
-            <h3>请告诉我们您的想法</h3>
-            <textarea id="feedbackText" placeholder="您的反馈对我们很重要..."></textarea>
-            <div class="modal-buttons">
-                <button id="submitFeedback">提交</button>
-                <button class="close-modal">取消</button>
-            </div>
-        </div>
-    </div>
 
     <!-- 添加成功提示 -->
     <div id="successToast" class="toast">感谢您的反馈</div>

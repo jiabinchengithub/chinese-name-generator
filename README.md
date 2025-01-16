@@ -1,8 +1,15 @@
 # Chinese Name Generator for English Speakers
 
-A web application that helps English speakers find meaningful Chinese names that match their English names while preserving cultural authenticity.
+## version record
+### 1.0.0
+- **移除 "Clear All" 按钮**
+  - 删除了与 "Clear All" 按钮相关的 JavaScript 代码。
+  - 移除了按钮的 CSS 样式。
+  - 确保 HTML 中不再包含 "Clear All" 按钮的元素。
 
 ## Features
+  - 清理了不必要的代码，提升了代码的可读性和维护性。
+  - 确保页面在移除按钮后仍然正常工作。
 
 - Generate Chinese names based on English name input
 - Provide cultural interpretation for each generated name
@@ -101,5 +108,4 @@ python -m http.server 8000
 欢迎提交 Issue 和 Pull Request 来帮助改进这个项目！
 
 ## 许可证
-
-MIT License
+此项目采用 MIT 许可证，详情请查看 LICENSE 文件。

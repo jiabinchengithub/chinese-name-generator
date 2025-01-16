@@ -167,12 +167,12 @@ body {
 }
 
 .name-card {
-    width: 100%;
-    position: relative;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
     padding: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
 }
 
 .name-header {
@@ -337,18 +337,24 @@ body {
 
 /* Loading Animation */
 .loading-container {
+    display: none;
     text-align: center;
-    padding: 2rem;
+    padding: 20px;
 }
 
 .loading-spinner {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     border: 4px solid #f3f3f3;
-    border-top: 4px solid var(--primary-color);
+    border-top: 4px solid #3498db;
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin: 0 auto 1rem;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Modal Styles */
@@ -500,21 +506,48 @@ body {
 
 /* Footer Styles */
 .app-footer {
-    text-align: center;
-    margin-top: 3rem;
-    padding: 2rem 0;
+    margin-top: 40px;
+    padding: 20px;
     border-top: 1px solid var(--border-color);
 }
 
-.social-links {
-    margin-top: 1rem;
+.footer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
-.social-links a {
-    color: var(--text-color);
-    margin: 0 0.5rem;
-    font-size: 1.2rem;
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 12px;
+    width: 100%;
+}
+
+.social-link {
+    color: #666;
+    font-size: 20px;
+    transition: all 0.3s ease;
     text-decoration: none;
+    padding: 8px;
+}
+
+.social-link:hover {
+    transform: translateY(-2px);
+}
+
+.social-link[title="Share on Twitter"]:hover {
+    color: #1DA1F2;
+}
+
+.social-link[title="Share on Facebook"]:hover {
+    color: #4267B2;
+}
+
+.social-link[title="Share on LinkedIn"]:hover {
+    color: #0077B5;
 }
 
 /* Animations */
@@ -633,4 +666,323 @@ body {
 
 .share-buttons .fa-linkedin:hover {
     color: #0077B5;
+}
+
+/* 名字卡片样式 */
+.name-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    padding: 20px;
+    position: relative;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.feedback-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn,
+.feedback-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover,
+.feedback-btn:hover {
+    color: #4CAF50;
+}
+
+.feedback-btn.dislike:hover {
+    color: #f44336;
+}
+
+/* 移动端适配优化 */
+@media screen and (max-width: 768px) {
+    .options-group {
+        padding: 10px;
+    }
+    
+    .gender-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 10px;
+        width: 100%;
+    }
+
+    .option-label {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 8px;
+        background: #f5f5f5;
+        border-radius: 4px;
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    .option-label input[type="radio"] {
+        margin-right: 8px;
+    }
+}
+
+/* 保存按钮样式 */
+.save-btn {
+    transition: color 0.3s ease;
+}
+
+.save-btn:not(.saved) {
+    color: #666;
+}
+
+.save-btn.saved {
+    color: #ff4081;
+}
+
+.save-btn:hover {
+    transform: scale(1.1);
+}
+
+/* 保存按钮动画效果 */
+.save-btn.saved i {
+    animation: heartBeat 0.3s ease-in-out;
+}
+
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* 清除按钮样式 */
+.clear-saved-btn {
+    background: none;
+    border: none;
+    color: #666;
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.clear-saved-btn:hover {
+    color: #ff4081;
+}
+
+.clear-saved-btn i {
+    font-size: 1rem;
+}
+
+/* 确认弹窗样式 */
+.confirm-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.confirm-modal-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    width: 300px;
+    text-align: center;
+}
+
+.confirm-modal-title {
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: #333;
+}
+
+.confirm-modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.confirm-modal-button {
+    padding: 8px 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.confirm-button {
+    background-color: #ff4081;
+    color: white;
+}
+
+.confirm-button:hover {
+    background-color: #f50057;
+}
+
+.cancel-button {
+    background-color: #f5f5f5;
+    color: #666;
+}
+
+.cancel-button:hover {
+    background-color: #e0e0e0;
+}
+
+/* 清除按钮容器 */
+.title-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 0;
+}
+
+/* Saved Names 标题样式 */
+h2 {
+    margin: 0;
+    height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    h2, .clear-all-btn {
+        height: 36px;
+    }
+    
+    .clear-all-btn {
+        padding: 0 12px;
+        font-size: 13px;
+    }
+}
+
+/* 保存名字区域的容器 */
+#savedNames {
+    position: relative;
+    padding: 20px;
+}
+
+/* 标题和按钮的容器 */
+.title-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 40px;
+    margin-bottom: 20px;
+}
+
+/* Saved Names 标题样式 */
+h2 {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    font-size: 24px;
+    height: 40px;
+    gap: 8px;
+}
+
+/* 清除按钮新样式 */
+.clear-all-btn {
+    color: #ff4081;
+    background: none;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px 12px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.clear-all-btn:hover {
+    color: #f50057;
+    text-decoration: underline;
+}
+
+.clear-all-btn i {
+    margin-right: 4px;
+    font-size: 16px;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .title-actions {
+        height: 36px;
+        padding: 15px 15px 0 15px;
+    }
+
+    h2 {
+        font-size: 20px;
+        line-height: 36px;
+    }
+    
+    .clear-all-btn {
+        height: 36px;
+        font-size: 13px;
+    }
+}
+
+/* 保存名字列表容器 */
+.saved-names-list {
+    padding: 0 20px;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    #savedNames {
+        padding: 15px;
+    }
+
+    .title-actions {
+        padding-right: 15px;
+    }
+
+    h2, .clear-all-btn {
+        height: 36px;
+    }
+    
+    .clear-all-btn {
+        padding: 0 12px;
+        font-size: 13px;
+    }
+
+    .saved-names-list {
+        padding: 0 15px;
+    }
 }

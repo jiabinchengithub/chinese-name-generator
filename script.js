@@ -122,63 +122,125 @@ const speech = {
     synth: window.speechSynthesis,
     voices: [],
     async init() {
+        // 检查浏览器是否支持语音合成
+        if (!window.speechSynthesis) {
+            console.warn('浏览器不支持语音合成');
+            return;
+        }
+
         if (this.voices.length > 0) return;
         
         // 等待voices加载
-        if (speechSynthesis.getVoices().length === 0) {
-            await new Promise(resolve => {
-                speechSynthesis.addEventListener('voiceschanged', resolve, { once: true });
-            });
+        try {
+            if (speechSynthesis.getVoices().length === 0) {
+                await new Promise(resolve => {
+                    speechSynthesis.addEventListener('voiceschanged', resolve, { once: true });
+                    // 添加超时处理
+                    setTimeout(resolve, 1000); // 1秒后超时
+                });
+            }
+            
+            this.voices = speechSynthesis.getVoices().filter(voice => 
+                voice.lang.startsWith('zh')
+            );
+            
+            if (this.voices.length === 0) {
+                console.warn('未找到中文语音');
+            }
+        } catch (error) {
+            console.error('语音初始化失败:', error);
         }
-        
-        this.voices = speechSynthesis.getVoices().filter(voice => 
-            voice.lang.startsWith('zh')
-        );
     },
     speak(text) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.voice = this.voices[0];
-        utterance.rate = 0.8;
-        this.synth.speak(utterance);
+        if (!window.speechSynthesis || this.voices.length === 0) {
+            console.warn('语音功能不可用');
+            return;
+        }
+
+        try {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.voice = this.voices[0];
+            utterance.rate = 0.8;
+            this.synth.speak(utterance);
+        } catch (error) {
+            console.error('语音播放失败:', error);
+        }
     }
 };
 
 // 保存的名字管理
 const savedNames = {
     items: JSON.parse(localStorage.getItem(STORAGE_KEYS.SAVED_NAMES) || '[]'),
-    add(nameData) {
+    
+    toggle(button, nameData) {
         try {
             // 检查是否已经保存过
-            const isDuplicate = this.items.some(item => 
+            const index = this.items.findIndex(item => 
                 item.chineseName === nameData.chineseName && 
                 item.pinyin === nameData.pinyin
             );
             
-            if (!isDuplicate) {
+            if (index === -1) {
+                // 添加到保存列表
                 this.items.push({
                     ...nameData,
                     savedAt: Date.now()
                 });
-                this.save();
-                this.render();
+                button.classList.add('saved');
                 showMessage('Name saved successfully!');
             } else {
-                showMessage('This name is already saved.');
+                // 从保存列表中移除
+                this.items.splice(index, 1);
+                button.classList.remove('saved');
+                showMessage('Name removed from saved list.');
             }
+            
+            this.save();
+            this.render();
         } catch (error) {
-            console.error('Error saving name:', error);
-            showMessage('Failed to save name.');
+            console.error('Error toggling save state:', error);
+            showMessage('Failed to update saved names.');
         }
     },
-    remove(index) {
-        this.items.splice(index, 1);
-        this.save();
-        this.render();
-        showMessage('Name removed from saved list.');
+
+    remove(chineseName, pinyin) {
+        try {
+            // 通过中文名和拼音找到要删除的项目索引
+            const index = this.items.findIndex(item => 
+                item.chineseName === chineseName && 
+                item.pinyin === pinyin
+            );
+            
+            if (index !== -1) {
+                this.items.splice(index, 1);
+                this.save();
+                this.render();
+                
+                // 更新所有相关卡片的心形图标状态
+                const saveButtons = document.querySelectorAll('.save-btn');
+                saveButtons.forEach(button => {
+                    const card = button.closest('.name-card');
+                    if (card) {
+                        const cardChineseName = card.querySelector('.chinese-name').textContent;
+                        const cardPinyin = card.querySelector('.pinyin').textContent;
+                        if (cardChineseName === chineseName && cardPinyin === pinyin) {
+                            button.classList.remove('saved');
+                        }
+                    }
+                });
+                
+                showMessage('Name removed from saved list.');
+            }
+        } catch (error) {
+            console.error('Error removing name:', error);
+            showMessage('Failed to remove name.');
+        }
     },
+
     save() {
         localStorage.setItem(STORAGE_KEYS.SAVED_NAMES, JSON.stringify(this.items));
     },
+
     render() {
         const container = document.querySelector('.saved-names-list');
         if (!container) return;
@@ -188,7 +250,7 @@ const savedNames = {
             return;
         }
         
-        container.innerHTML = this.items.map((item, index) => `
+        container.innerHTML = this.items.map(item => `
             <div class="saved-name-card">
                 <div class="saved-name-content">
                     <div class="name-title">
@@ -204,73 +266,39 @@ const savedNames = {
                     <button onclick="copyToClipboard('${item.chineseName}')" title="Copy name">
                         <i class="fas fa-copy"></i>
                     </button>
-                    <button onclick="savedNames.remove(${index})" title="Remove from saved">
+                    <button onclick="savedNames.remove('${item.chineseName}', '${item.pinyin}')" title="Remove from saved">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
         `).join('');
+    },
+
+    // 添加清除方法
+    clearAll() {
+        this.items = [];
+        localStorage.removeItem(STORAGE_KEYS.SAVED_NAMES);
+        this.render();
+        showMessage('All saved names have been cleared.');
     }
 };
 
 // 用户反馈
 const feedback = {
-    type: '',
-    modal: null,
-    toast: null,
-    
-    init() {
-        this.modal = document.getElementById('feedbackModal');
-        this.toast = document.getElementById('successToast');
-        
-        // 绑定反馈按钮事件
-        document.getElementById('likeBtn').addEventListener('click', () => this.showModal('like'));
-        document.getElementById('dislikeBtn').addEventListener('click', () => this.showModal('dislike'));
-        
-        // 绑定弹窗按钮事件
-        document.querySelector('.close-modal').addEventListener('click', () => this.hideModal());
-        document.getElementById('submitFeedback').addEventListener('click', () => this.submit());
-    },
-    
-    showModal(type) {
-        this.type = type;
-        this.modal.style.display = 'flex';
-        document.getElementById('feedbackText').focus();
-    },
-    
-    hideModal() {
-        this.modal.style.display = 'none';
-        document.getElementById('feedbackText').value = '';
-    },
-    
-    async submit() {
-        const text = document.getElementById('feedbackText').value;
-        const feedbackData = {
-            type: this.type,
-            text,
+    submitFeedback(name, type) {
+        // 保存反馈到本地存储
+        const feedback = {
+            name,
+            type,
             timestamp: Date.now()
         };
         
-        // 保存反馈到本地存储
-        const feedbacks = JSON.parse(localStorage.getItem('userFeedbacks') || '[]');
-        feedbacks.push(feedbackData);
-        localStorage.setItem('userFeedbacks', JSON.stringify(feedbacks));
+        const feedbacks = JSON.parse(localStorage.getItem('nameFeedbacks') || '[]');
+        feedbacks.push(feedback);
+        localStorage.setItem('nameFeedbacks', JSON.stringify(feedbacks));
         
-        // 隐藏弹窗
-        this.hideModal();
-        
-        // 显示成功提示
-        this.showToast();
-        
-        // 隐藏反馈按钮
-        document.getElementById('feedbackButtons').style.display = 'none';
-    },
-    
-    showToast() {
-        this.toast.style.display = 'block';
-        setTimeout(() => {
-            this.toast.style.display = 'none';
-        }, 3000);
+        // 显示反馈确认
+        showMessage(`感谢您的${type === 'like' ? '好评' : '反馈'}！`);
     }
 };
 
@@ -302,20 +330,94 @@ const social = {
     }
 };
 
-// 调用API生成名字
-async function generateChineseNames(englishName) {
-    try {
-        showLoading();
-        clearResults();
+// 修改社交分享功能
+const socialShare = {
+    getShareData() {
+        // 使用一个实际存在的URL作为备用
+        const url = window.location.hostname === 'localhost' 
+            ? 'https://your-deployed-website.com' // 替换为你的实际网站地址
+            : window.location.href;
+        const title = 'Chinese Name Generator - Find Your Perfect Chinese Name';
+        const text = `Check out this Chinese Name Generator: ${title}`;
+        return { url, title, text };
+    },
 
-        if (!englishName) {
-            throw new Error('请输入英文名');
+    twitter() {
+        const { text, url } = this.getShareData();
+        const shareUrl = `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+        this.openPopup(shareUrl, 'Twitter');
+    },
+
+    facebook() {
+        const { url, title } = this.getShareData();
+        // 使用 Feed Dialog 方式分享
+        const shareUrl = `https://www.facebook.com/dialog/feed?` +
+            `app_id=936490217542515` + // 使用一个通用的 app_id
+            `&display=popup` +
+            `&link=${encodeURIComponent(url)}` +
+            `&quote=${encodeURIComponent(title)}` +
+            `&redirect_uri=${encodeURIComponent(url)}`;
+        
+        this.openPopup(shareUrl, 'Facebook');
+    },
+
+    linkedin() {
+        const { url } = this.getShareData();
+        const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+        this.openPopup(shareUrl, 'LinkedIn');
+    },
+
+    openPopup(url, title) {
+        const width = 600;
+        const height = 400;
+        const left = (window.innerWidth - width) / 2;
+        const top = (window.innerHeight - height) / 2;
+        
+        try {
+            window.open(
+                url,
+                `Share on ${title}`,
+                `width=${width},height=${height},left=${left},top=${top},toolbar=0,status=0`
+            );
+        } catch (error) {
+            console.error('Failed to open share window:', error);
+            // 如果弹窗失败，尝试直接打开链接
+            window.location.href = url;
         }
+    },
 
-        const batchMode = document.getElementById('batchMode').checked;
+    share(platform) {
+        // 检查是否支持 Web Share API
+        if (navigator.share && /mobile/i.test(navigator.userAgent)) {
+            const { title, text, url } = this.getShareData();
+            navigator.share({
+                title,
+                text,
+                url
+            }).catch(err => {
+                console.error('Error sharing:', err);
+                // 如果原生分享失败，回退到常规分享方法
+                this[platform]();
+            });
+        } else {
+            this[platform]();
+        }
+    }
+};
+
+// 生成中文名字
+async function generateChineseNames(englishName) {
+    console.log('开始生成名字，输入:', englishName);
+    try {
         const gender = document.querySelector('input[name="gender"]:checked').value;
+        const batchMode = document.getElementById('batchMode').checked;
+        console.log('选项:', { gender, batchMode });
 
-        const requestBody = {
+        // 修改生成数量的逻辑
+        const count = batchMode ? 9 : 3;
+
+        // 构建API请求数据
+        const requestData = {
             model: "glm-4",
             messages: [
                 {
@@ -324,46 +426,62 @@ async function generateChineseNames(englishName) {
                 },
                 {
                     role: "user",
-                    content: `请为英文名 "${englishName}" 生成${batchMode ? '9' : '3'}个${gender !== 'neutral' ? gender === 'male' ? '男性' : '女性' : ''}的中文名。要求：
+                    content: `请为英文名"${englishName}"生成${count}个${gender}性的中文名字。要求：
+
 1. 尽量选用与 "${englishName}" 发音相近的汉字
-2. 名字要朗朗上口，易于记忆
-3. 要符合中国传统文化审美
-4. 每个名字都要提供详细的文化含义解释
-5. 这些名字之间不要重复`
+2. 这${count}个名字必须各不相同
+3. 名字要朗朗上口，易于记忆
+4. 名字要有独特的文化内涵
+5. 避免使用过于常见或过于生僻的字
+6. 每个名字都要符合中国传统文化审美
+7. 每个名字都要提供详细的文化含义解释
+8. 这些名字之间不要重复`
                 }
-            ],
-            temperature: 0.9,
-            top_p: 0.9,
-            max_tokens: 1024,
-            stream: false
+            ]
         };
 
+        // 发送API请求
         const response = await fetch(API_CONFIG.url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': API_CONFIG.apiKey
+                'Authorization': `Bearer ${API_CONFIG.apiKey}`
             },
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify(requestData)
         });
 
         if (!response.ok) {
-            throw new Error('Failed to generate names');
+            throw new Error(`API请求失败: ${response.status}`);
         }
 
         const data = await response.json();
+        console.log('API响应:', data);
+
+        // 解析API返回的名字建议
         const suggestions = parseSuggestions(data);
         
-        if (!Array.isArray(suggestions) || suggestions.length === 0) {
-            throw new Error('Invalid response format');
+        // 显示结果
+        const resultsContainer = document.getElementById('results');
+        if (!resultsContainer) {
+            console.error('未找到结果容器元素');
+            return;
         }
 
-        displayResults(suggestions);
+        resultsContainer.innerHTML = ''; // 清空现有结果
+
+        // 添加网格布局类
+        resultsContainer.className = 'results-container' + (batchMode ? ' grid-large' : ' grid-small');
+
+        suggestions.forEach(nameData => {
+            const nameCard = createNameCard(nameData);
+            resultsContainer.appendChild(nameCard);
+        });
+
+        console.log('名字展示完成');
+
     } catch (error) {
         console.error('生成名字时出错:', error);
-        showError(error.message);
-    } finally {
-        hideLoading();
+        throw error;
     }
 }
 
@@ -404,80 +522,54 @@ function parseSuggestions(data) {
     }
 }
 
-// 显示名字建议
-function displayResults(suggestions) {
-    const resultsSection = document.getElementById('results');
-    const html = suggestions.map((nameData, index) => {
-        // 为了安全地传递数据，对特殊字符进行编码
-        const safeNameData = {
-            chineseName: nameData.chineseName,
-            pinyin: nameData.pinyin,
-            meaning: nameData.meaning,
-            culturalNotes: {
-                chinese: nameData.culturalNotes.chinese,
-                english: nameData.culturalNotes.english
-            }
-        };
+// 显示生成的名字结果
+async function displayResults(names) {
+    const resultsContainer = document.getElementById('results');
+    resultsContainer.innerHTML = ''; // 清空现有结果
+
+    names.forEach(name => {
+        const nameCard = document.createElement('div');
+        nameCard.className = 'name-card';
         
-        const encodedShareData = encodeURIComponent(JSON.stringify(safeNameData));
-        
-        return `
-            <div class="name-card" data-index="${index}">
-                <div class="name-header">
-                    <h2 class="chinese-name">${nameData.chineseName}</h2>
-                    <div class="name-actions">
-                        <button class="save-name-btn" data-name-info='${JSON.stringify(safeNameData).replace(/'/g, "&apos;")}' title="Save name">
-                            <i class="fas fa-heart"></i>
-                        </button>
-                        <button onclick="speech.speak('${nameData.chineseName}')" title="Play pronunciation">
-                            <i class="fas fa-volume-up"></i>
-                        </button>
-                        <button onclick="copyToClipboard('${nameData.chineseName}')" title="Copy name">
-                            <i class="fas fa-copy"></i>
-                        </button>
-                    </div>
+        nameCard.innerHTML = `
+            <div class="name-content">
+                <h3 class="chinese-name">${name.chineseName}</h3>
+                <p class="pinyin">${name.pinyin}</p>
+                <div class="meaning">
+                    <p>${name.meaning}</p>
+                    <p class="detailed-meaning">${name.detailedMeaning || ''}</p>
+                    <p class="english-meaning">${name.englishMeaning || ''}</p>
                 </div>
-                <p class="pinyin">${nameData.pinyin}</p>
-                <p class="meaning">${nameData.meaning}</p>
-                <div class="cultural-notes">
-                    <p class="chinese">${nameData.culturalNotes.chinese}</p>
-                    <p class="english">${nameData.culturalNotes.english}</p>
-                </div>
-                <div class="share-buttons">
-                    <button class="share-btn" data-platform="twitter" data-share-info='${encodedShareData}'>
-                        <i class="fab fa-twitter"></i> Twitter
+            </div>
+            <div class="card-footer">
+                <div class="feedback-buttons">
+                    <button class="feedback-btn like" data-type="like">
+                        <i class="fas fa-thumbs-up"></i> 喜欢
                     </button>
-                    <button class="share-btn" data-platform="facebook" data-share-info='${encodedShareData}'>
-                        <i class="fab fa-facebook"></i> Facebook
-                    </button>
-                    <button class="share-btn" data-platform="linkedin" data-share-info='${encodedShareData}'>
-                        <i class="fab fa-linkedin"></i> LinkedIn
+                    <button class="feedback-btn dislike" data-type="dislike">
+                        <i class="fas fa-thumbs-down"></i> 不喜欢
                     </button>
                 </div>
             </div>
         `;
-    }).join('');
-    
-    resultsSection.innerHTML = html;
-    
-    // 添加保存按钮的事件监听器
-    document.querySelectorAll('.save-name-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const nameInfo = JSON.parse(this.dataset.nameInfo);
-            savedNames.add(nameInfo);
+
+        // 添加反馈按钮事件监听
+        const feedbackButtons = nameCard.querySelectorAll('.feedback-btn');
+        feedbackButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const feedbackType = this.dataset.type;
+                submitFeedback(name, feedbackType);
+                
+                // 添加视觉反馈
+                this.classList.add('active');
+                setTimeout(() => {
+                    this.classList.remove('active');
+                }, 200);
+            });
         });
+
+        resultsContainer.appendChild(nameCard);
     });
-    
-    // 添加分享按钮的事件监听器
-    document.querySelectorAll('.share-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const platform = this.dataset.platform;
-            const nameInfo = JSON.parse(decodeURIComponent(this.dataset.shareInfo));
-            social.share(platform, nameInfo);
-        });
-    });
-    
-    document.getElementById('feedbackButtons').style.display = 'flex';
 }
 
 // 工具函数
@@ -540,20 +632,28 @@ function isValidNameSuggestion(suggestion) {
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log('页面加载完成，开始初始化');
+    
     const englishNameInput = document.getElementById('englishName');
     const generateButton = document.getElementById('generateBtn');
 
+    if (!englishNameInput || !generateButton) {
+        console.error('未找到必要的DOM元素');
+        return;
+    }
+
     // 初始化语音合成
-    await speech.init();
-
-    // 初始化用户反馈
-    feedback.init();
-
-    // 渲染保存的名字
-    savedNames.render();
+    try {
+        await speech.init();
+        console.log('语音合成初始化完成');
+    } catch (error) {
+        console.error('语音合成初始化失败:', error);
+        // 继续执行，不影响主要功能
+    }
 
     // 绑定生成按钮事件
     generateButton.addEventListener('click', async () => {
+        console.log('生成按钮被点击');
         const englishName = englishNameInput.value.trim();
         if (!englishName) {
             showError('请输入英文名');
@@ -561,16 +661,145 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         try {
+            showLoading();
+            clearResults();
             await generateChineseNames(englishName);
         } catch (error) {
             console.error('生成名字时出错:', error);
+            showError('生成名字时出错，请重试');
+        } finally {
+            hideLoading();
         }
     });
 
     // 绑定输入框回车事件
-    englishNameInput.addEventListener('keypress', async (e) => {
+    englishNameInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             generateButton.click();
         }
     });
+
+    // 初始化保存的名字显示
+    savedNames.render();
+
+    // 初始化社交分享按钮
+    const twitterBtn = document.querySelector('a[title="Share on Twitter"]');
+    const facebookBtn = document.querySelector('a[title="Share on Facebook"]');
+    const linkedinBtn = document.querySelector('a[title="Share on LinkedIn"]');
+
+    if (twitterBtn) {
+        twitterBtn.onclick = (e) => {
+            e.preventDefault();
+            socialShare.share('twitter');
+        };
+    }
+
+    if (facebookBtn) {
+        facebookBtn.onclick = (e) => {
+            e.preventDefault();
+            socialShare.share('facebook');
+        };
+    }
+
+    if (linkedinBtn) {
+        linkedinBtn.onclick = (e) => {
+            e.preventDefault();
+            socialShare.share('linkedin');
+        };
+    }
+
+    console.log('初始化完成');
 });
+
+function createNameCard(nameData) {
+    const nameCard = document.createElement('div');
+    nameCard.className = 'name-card';
+    
+    // 检查该名字是否已保存
+    const isSaved = savedNames.items.some(item => 
+        item.chineseName === nameData.chineseName && 
+        item.pinyin === nameData.pinyin
+    );
+    
+    nameCard.innerHTML = `
+        <div class="name-content">
+            <h3 class="chinese-name">${nameData.chineseName}</h3>
+            <p class="pinyin">${nameData.pinyin}</p>
+            <p class="meaning">${nameData.meaning}</p>
+            <div class="cultural-notes">
+                <p class="cn-note">${nameData.culturalNotes.chinese}</p>
+                <p class="en-note">${nameData.culturalNotes.english}</p>
+            </div>
+        </div>
+        <div class="card-footer">
+            <div class="card-actions">
+                <button onclick="speech.speak('${nameData.chineseName}')" class="action-btn">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <button onclick="copyToClipboard('${nameData.chineseName}')" class="action-btn">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button onclick="savedNames.toggle(this, ${JSON.stringify(nameData).replace(/"/g, '&quot;')})" 
+                        class="action-btn save-btn ${isSaved ? 'saved' : ''}">
+                    <i class="fas fa-heart"></i>
+                </button>
+            </div>
+            <div class="feedback-buttons">
+                <button class="feedback-btn like" onclick="submitFeedback('${nameData.chineseName}', 'like')">
+                    <i class="fas fa-thumbs-up"></i>
+                </button>
+                <button class="feedback-btn dislike" onclick="submitFeedback('${nameData.chineseName}', 'dislike')">
+                    <i class="fas fa-thumbs-down"></i>
+                </button>
+            </div>
+        </div>
+    `;
+
+    return nameCard;
+}
+
+function submitFeedback(name, type) {
+    feedback.submitFeedback(name, type);
+}
+
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
+function showConfirmModal(message, onConfirm) {
+    // 创建模态框
+    const modal = document.createElement('div');
+    modal.className = 'confirm-modal';
+    modal.style.display = 'block';
+    
+    modal.innerHTML = `
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-title">${message}</div>
+            <div class="confirm-modal-buttons">
+                <button class="confirm-modal-button confirm-button">确认</button>
+                <button class="confirm-modal-button cancel-button">取消</button>
+            </div>
+        </div>
+    `;
+
+    const confirmButton = modal.querySelector('.confirm-button');
+    const cancelButton = modal.querySelector('.cancel-button');
+
+    confirmButton.onclick = () => {
+        onConfirm();
+        modal.remove();
+    };
+
+    cancelButton.onclick = () => {
+        modal.remove();
+    };
+
+    document.body.appendChild(modal);
+}
