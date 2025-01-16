@@ -4,32 +4,100 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chinese Name Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Chinese Name Generator</h1>
-            <p>Generate a meaningful Chinese name based on your English name</p>
+    <div class="app-container">
+        <header class="app-header">
+            <h1><i class="fas fa-language"></i> Chinese Name Generator</h1>
+            <p class="subtitle">Discover your perfect Chinese name with cultural meaning</p>
         </header>
 
-        <div class="input-section">
-            <div class="input-wrapper">
-                <input type="text" id="englishName" placeholder="Enter your English name">
-                <button id="generateBtn">Generate Names</button>
+        <main class="main-content">
+            <div class="input-section">
+                <div class="input-group">
+                    <input type="text" id="englishName" placeholder="Enter your English name" class="name-input">
+                    <button id="generateBtn" class="generate-btn">
+                        <i class="fas fa-magic"></i> Generate Names
+                    </button>
+                </div>
+                <div class="options-group">
+                    <label class="option-label">
+                        <input type="checkbox" id="batchMode">
+                        Generate multiple names
+                    </label>
+                    <div class="gender-options">
+                        <label class="option-label">
+                            <input type="radio" name="gender" value="neutral" checked>
+                            Gender Neutral
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="gender" value="male">
+                            Male
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="gender" value="female">
+                            Female
+                        </label>
+                    </div>
+                </div>
+                <div id="feedbackButtons" class="feedback-section" style="display: none;">
+                    <button id="likeBtn" class="feedback-btn">
+                        <i class="fas fa-thumbs-up"></i> 喜欢
+                    </button>
+                    <button id="dislikeBtn" class="feedback-btn">
+                        <i class="fas fa-thumbs-down"></i> 不喜欢
+                    </button>
+                </div>
             </div>
-        </div>
 
-        <div id="loading" class="loading-spinner" style="display: none;">
-            <div class="spinner"></div>
-            <p>Generating names...</p>
-        </div>
+            <div id="error" class="error-message" style="display: none;"></div>
+            
+            <div id="loading" class="loading-container" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Creating your perfect Chinese name...</p>
+            </div>
 
-        <div id="results" class="results-section">
-            <!-- Generated name cards will be inserted here -->
+            <section id="results" class="results-container"></section>
+
+            <div id="savedNames" class="saved-names-container">
+                <h2><i class="fas fa-heart"></i> Saved Names</h2>
+                <div class="saved-names-list"></div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div class="footer-content">
+                <p>Made with <i class="fas fa-heart"></i> by Your Name</p>
+                <div class="social-links">
+                    <a href="#" title="Share on Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" title="Share on Facebook"><i class="fab fa-facebook"></i></a>
+                    <a href="#" title="Share on LinkedIn"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Audio for pronunciation -->
+    <audio id="pronunciationAudio" style="display: none;"></audio>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="modal">
+        <div class="modal-content">
+            <h3>请告诉我们您的想法</h3>
+            <textarea id="feedbackText" placeholder="您的反馈对我们很重要..."></textarea>
+            <div class="modal-buttons">
+                <button id="submitFeedback">提交</button>
+                <button class="close-modal">取消</button>
+            </div>
         </div>
     </div>
 
+    <!-- 添加成功提示 -->
+    <div id="successToast" class="toast">感谢您的反馈</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
