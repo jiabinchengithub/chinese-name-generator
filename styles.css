@@ -1,0 +1,211 @@
+/* 全局样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 基础样式 */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* 头部样式 */
+header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+header h1 {
+    color: #c41e3a;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+header p {
+    color: #666;
+    font-size: 1.2rem;
+}
+
+/* 输入区域样式 */
+.input-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.input-wrapper {
+    display: flex;
+    gap: 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+input[type="text"] {
+    flex: 1;
+    padding: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+input[type="text"]:focus {
+    border-color: #c41e3a;
+    outline: none;
+}
+
+button {
+    padding: 1rem 2rem;
+    background-color: #c41e3a;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #a01830;
+}
+
+/* 加载动画样式 */
+.loading-spinner {
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #c41e3a;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-spinner p {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+/* 结果区域样式 */
+.results-section {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.name-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.name-card h2 {
+    color: #c41e3a;
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 0.5rem;
+}
+
+.name-card .pinyin,
+.name-card .meaning {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.name-card .pinyin strong,
+.name-card .meaning strong {
+    color: #c41e3a;
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+.name-card .pinyin {
+    font-style: italic;
+}
+
+.name-card .meaning {
+    margin-bottom: 1rem;
+}
+
+.name-card .cultural-notes {
+    background: #f9f9f9;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-top: 1rem;
+}
+
+.name-card .cultural-notes .chinese {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.name-card .cultural-notes .english {
+    color: #666;
+    font-size: 0.85rem;
+    font-style: italic;
+    line-height: 1.6;
+}
+
+/* 页脚样式 */
+footer {
+    text-align: center;
+    margin-top: 3rem;
+    color: #666;
+}
+
+/* 设置按钮样式 */
+.settings-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.settings-button:hover {
+    background-color: #e0e0e0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .input-wrapper {
+        flex-direction: column;
+    }
+
+    button {
+        width: 100%;
+    }
+}
