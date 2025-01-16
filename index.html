@@ -8,20 +8,24 @@
 </head>
 <body>
     <div class="container">
-        <h1>Chinese Name Generator</h1>
-        <p class="subtitle">Generate a meaningful Chinese name based on your English name</p>
-        
+        <header>
+            <h1>Chinese Name Generator</h1>
+            <p>Generate a meaningful Chinese name based on your English name</p>
+        </header>
+
         <div class="input-section">
-            <input type="text" id="englishName" placeholder="Enter your English name">
-            <button id="generateBtn">Generate Names</button>
+            <div class="input-wrapper">
+                <input type="text" id="englishName" placeholder="Enter your English name">
+                <button id="generateBtn">Generate Names</button>
+            </div>
         </div>
 
-        <div id="loading" class="loading" style="display: none;">
+        <div id="loading" class="loading-spinner" style="display: none;">
             <div class="spinner"></div>
             <p>Generating names...</p>
         </div>
 
-        <div id="results" class="results">
+        <div id="results" class="results-section">
             <!-- Generated name cards will be inserted here -->
         </div>
     </div>

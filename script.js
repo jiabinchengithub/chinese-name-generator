@@ -85,14 +85,24 @@ const API_CONFIG = {
 
 // 系统提示词
 const SYSTEM_PROMPT = `你是一位专业的中文起名专家，擅长为外国人起富有文化内涵的中文名字。
-请根据用户输入的英文名，生成3个合适的中文名建议。注意以下要点：
-1. 名字要发音优美，寓意积极
-2. 考虑中国传统文化内涵
-3. 遵循中国人起名的习惯
-   - 通常2-3个字
-   - 避免生僻字
-   - 考虑性别特征（如果能从英文名判断）
-4. 输出格式必须是JSON数组`;
+请根据用户输入的英文名，生成3个合适的中文名建议。每个建议必须包含以下字段：
+- chinese: 中文名字（字符串）
+- pinyin: 拼音（字符串）
+- meaning: 名字的含义（字符串）
+- culturalNotes: 包含 chinese 和 english 两个字段的对象，分别是中文和英文的文化解释
+
+输出格式示例：
+[
+  {
+    "chinese": "李明德",
+    "pinyin": "Lǐ Míng Dé",
+    "meaning": "光明和美德",
+    "culturalNotes": {
+      "chinese": "李是常见姓氏，明德体现了中国传统文化中对光明和美德的追求",
+      "english": "Li is a common surname, Ming De reflects the pursuit of brightness and virtue in Chinese culture"
+    }
+  }
+]`;
 
 // 检查API密钥
 function checkApiKey() {
@@ -122,21 +132,20 @@ function addSettingsButton() {
     settingsButton.textContent = '设置';
     settingsButton.className = 'settings-button';
     settingsButton.onclick = clearApiKey;
-    document.querySelector('.container').appendChild(settingsButton);
+    document.body.appendChild(settingsButton);
 }
 
 // 调用API生成名字
 async function generateChineseNames(englishName) {
     if (!checkApiKey()) {
         alert('需要API密钥才能使用此功能！');
-        return;
+        return [];
     }
 
     const loadingElement = document.getElementById('loading');
     loadingElement.style.display = 'block';
 
     try {
-        console.log('开始API请求...');
         const requestBody = {
             model: "glm-4-flash",
             messages: [
@@ -146,7 +155,7 @@ async function generateChineseNames(englishName) {
                 },
                 {
                     role: "user",
-                    content: `请为英文名 "${englishName}" 生成3个合适的中文名建议，必须严格按照规定的JSON格式输出。`
+                    content: `请为英文名 "${englishName}" 生成3个合适的中文名建议。请确保返回的是标准JSON格式，包含所有必需字段。`
                 }
             ],
             temperature: 0.7,
@@ -155,65 +164,77 @@ async function generateChineseNames(englishName) {
             stream: false
         };
 
-        console.log('请求体:', JSON.stringify(requestBody, null, 2));
-
+        console.log('发送请求...');
         const response = await fetch(API_CONFIG.url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-                'Accept': 'application/json'
+                'Authorization': `Bearer ${API_CONFIG.apiKey}`
             },
             body: JSON.stringify(requestBody)
         });
 
-        console.log('API响应状态:', response.status);
-        const responseText = await response.text();
-        console.log('API原始响应:', responseText);
-
         if (!response.ok) {
-            throw new Error(`API请求失败: ${response.status} ${responseText}`);
+            throw new Error(`API请求失败: ${response.status}`);
         }
 
-        const data = JSON.parse(responseText);
-        console.log('解析后的响应数据:', data);
+        const data = await response.json();
+        console.log('API响应:', data);
 
-        if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+        if (!data.choices?.[0]?.message?.content) {
             throw new Error('API响应格式不正确');
         }
 
-        // 清理并解析JSON响应
+        // 提取并解析JSON内容
         const content = data.choices[0].message.content;
-        const cleanContent = content
-            .replace(/```json\n?/g, '')  // 移除开始的```json
-            .replace(/\n```$/g, '')     // 移除结束的```
-            .trim();                    // 清理空白字符
-        
-        console.log('清理后的JSON字符串:', cleanContent);
+        console.log('API返回的content:', content);
+
+        // 尝试提取JSON部分
+        const jsonMatch = content.match(/\[[\s\S]*\]/);
+        if (!jsonMatch) {
+            throw new Error('无法在响应中找到有效的JSON数组');
+        }
+
+        const cleanContent = jsonMatch[0].trim();
+        console.log('提取的JSON字符串:', cleanContent);
+
         const suggestions = JSON.parse(cleanContent);
         console.log('解析后的建议:', suggestions);
+
+        // 验证数据格式
+        if (!Array.isArray(suggestions) || !suggestions.every(isValidNameSuggestion)) {
+            throw new Error('API返回的数据格式不正确');
+        }
 
         return suggestions;
 
     } catch (error) {
         console.error('生成名字时出错:', error);
-        // 显示更详细的错误信息
-        return [{
-            chinese: '出错了',
-            pinyin: 'Chu Cuo Le',
-            meaning: `Error details: ${error.message}`,
-            culturalNotes: {
-                chinese: `抱歉，生成名字时遇到了技术问题：${error.message}`,
-                english: `Sorry, we encountered a technical issue: ${error.message}`
-            }
-        }];
+        alert(`生成名字时出错: ${error.message}`);
+        return [];
     } finally {
         loadingElement.style.display = 'none';
     }
 }
 
+// 验证名字建议的数据格式
+function isValidNameSuggestion(suggestion) {
+    return suggestion 
+        && typeof suggestion.chinese === 'string'
+        && typeof suggestion.pinyin === 'string'
+        && typeof suggestion.meaning === 'string'
+        && suggestion.culturalNotes
+        && typeof suggestion.culturalNotes.chinese === 'string'
+        && typeof suggestion.culturalNotes.english === 'string';
+}
+
 // 创建名字卡片HTML
 function createNameCard(nameData) {
+    if (!isValidNameSuggestion(nameData)) {
+        console.error('无效的名字数据:', nameData);
+        return '';
+    }
+
     return `
         <div class="name-card">
             <h2>${nameData.chinese}</h2>
@@ -227,27 +248,29 @@ function createNameCard(nameData) {
     `;
 }
 
-// 页面加载完成后的初始化
+// 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
     const englishNameInput = document.getElementById('englishName');
     const generateBtn = document.getElementById('generateBtn');
-    const resultsDiv = document.getElementById('results');
+    const resultsSection = document.getElementById('results');
 
-    // 生成按钮点击事件
     generateBtn.addEventListener('click', async () => {
         const englishName = englishNameInput.value.trim();
         if (!englishName) {
-            alert('Please enter an English name');
+            alert('Please enter your English name');
             return;
         }
 
-        resultsDiv.innerHTML = '';
+        resultsSection.innerHTML = '';
         const suggestions = await generateChineseNames(englishName);
-        const html = suggestions.map(createNameCard).join('');
-        resultsDiv.innerHTML = html;
+        
+        if (suggestions.length > 0) {
+            const html = suggestions.map(createNameCard).join('');
+            resultsSection.innerHTML = html;
+        }
     });
 
-    // 输入框回车事件
+    // 添加回车键支持
     englishNameInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             generateBtn.click();
